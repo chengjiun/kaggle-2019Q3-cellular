@@ -6,7 +6,7 @@ from ignite.handlers import EarlyStopping
 
 import torch.utils.data as D
 
-from models.ignite_trainer import DensenetTrainer
+from Models.ignite_trainer import DensenetTrainer
 from torchvision.models import densenet121
 
 
