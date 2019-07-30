@@ -11,17 +11,28 @@ from torchvision import transforms as T
 
 
 class Train:
-    num_workers = 8,
+    num_workers = (8,)
     batch_size = 8
-    device = 'cuda'
-    def __init__(self, ds: ImagesDS, model, batch_size=8, num_workers=8, device='cuda'):
+    device = "cuda"
+
+    def __init__(
+        self,
+        ds: ImagesDS,
+        model,
+        learning_rate=0.0005,
+        batch_size=8,
+        num_workers=8,
+        device="cuda",
+    ):
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.device = device
-        
-        self.loader = D.DataLoader(ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+
+        self.loader = D.DataLoader(
+            ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers
+        )
         self.criterion = nn.BCEWithLogitsLoss()
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         self.model = model
 
     def fit(self, epochs=10):
@@ -29,7 +40,7 @@ class Train:
         for epoch in range(epochs):
             tloss = 0
             acc = np.zeros(1)
-            for x, y in self.loader: 
+            for x, y in self.loader:
                 x = x.to(self.device)
                 self.optimizer.zero_grad()
                 output = self.model(x)
@@ -38,7 +49,11 @@ class Train:
                 loss = self.criterion(output, target)
                 loss.backward()
                 self.optimizer.step()
-                tloss += loss.item() 
+                tloss += loss.item()
                 acc += accuracy(output.cpu(), y)
                 del loss, output, y, x, target
-            print('Epoch {} -> Train Loss: {:.4f}, ACC: {:.2f}%'.format(epoch+1, tloss/tlen, acc[0]/tlen))
+            print(
+                "Epoch {} -> Train Loss: {:.4f}, ACC: {:.2f}%".format(
+                    epoch + 1, tloss / tlen, acc[0] / tlen
+                )
+            )
