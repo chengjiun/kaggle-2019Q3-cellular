@@ -6,7 +6,7 @@ from ignite.handlers import EarlyStopping
 
 import torch.utils.data as D
 
-from Models.ignite_trainer import DensenetTrainer
+from models.ignite_trainer import DensenetTrainer
 from torchvision.models import densenet121
 
 
@@ -19,7 +19,7 @@ num_workers = 6
 backbone = densenet121
 model_name = "densenet121_ignite"
 IGTrainer = DensenetTrainer(model=backbone, lr=lr, gamma=gamma)
-checkpoint_file = path_data + "models/" + model_name + ".ckpt"
+checkpoint_file = path_data + "checkpoints/" + model_name + ".ckpt"
 
 if __name__ == "__main__":
     ds, ds_val, ds_test, df_train, df_val, df_test = prepare_data_ds(path_data)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     tqdm.set_lock(Lock())
     trainer.run(loader, max_epochs=5)
     checkpoint_epochs_file = ".".join(checkpoint_file.split(".")[:-1]) + ".05.ckpt"
-    trainer.save_model(checkpoint_epochs_file)
+    IGTrainer.save_model(checkpoint_epochs_file)
     trainer.run(loader, max_epochs=10)
     checkpoint_epochs_file = ".".join(checkpoint_file.split(".")[:-1]) + ".15.ckpt"
-    trainer.save_model(checkpoint_epochs_file)
+    IGTrainer.save_model(checkpoint_epochs_file)
