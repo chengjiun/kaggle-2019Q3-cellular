@@ -18,6 +18,7 @@ class Train:
     def __init__(
         self,
         ds: ImagesDS,
+        val_ds: ImagesDS,
         model,
         learning_rate=0.0005,
         batch_size=8,
@@ -31,6 +32,10 @@ class Train:
         self.loader = D.DataLoader(
             ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers
         )
+        self.val_loader = D.DataLoader(
+            ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers
+        )
+
         self.criterion = nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         self.model = model

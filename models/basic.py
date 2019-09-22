@@ -13,10 +13,11 @@ class DensNet(nn.Module):
         self.features.conv0 = nn.Conv2d(num_channels, 64, 7, 2, 3)
         self.classifier = nn.Linear(1024, num_classes, bias=True)
         del preloaded
-        
+
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=True)
         out = F.adaptive_avg_pool2d(out, (1, 1)).view(features.size(0), -1)
         out = self.classifier(out)
         return out
+

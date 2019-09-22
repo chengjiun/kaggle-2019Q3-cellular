@@ -8,19 +8,12 @@ import pandas as pd
 
 class ImagesDS(D.Dataset):
     def __init__(
-        self,
-        df,
-        img_dir,
-        transform=None,
-        mode="train",
-        site=1,
-        channels=[1, 2, 3, 4, 5, 6],
+        self, df, img_dir, transform=None, mode="train", channels=[1, 2, 3, 4, 5, 6]
     ):
 
         self.transform = transform
         self.records = df.to_records(index=False)
         self.channels = channels
-        self.site = site
         self.mode = mode
         self.img_dir = img_dir
         self.len = df.shape[0]
@@ -33,10 +26,11 @@ class ImagesDS(D.Dataset):
             return T.ToTensor()(img)
 
     def _get_img_path(self, index, channel):
-        experiment, well, plate = (
+        experiment, well, plate, site = (
             self.records[index].experiment,
             self.records[index].well,
             self.records[index].plate,
+            self.records[index].site,
         )
         return "/".join(
             [
@@ -44,7 +38,7 @@ class ImagesDS(D.Dataset):
                 self.mode,
                 experiment,
                 f"Plate{plate}",
-                f"{well}_s{self.site}_w{channel}.png",
+                f"{well}_s{site}_w{channel}.png",
             ]
         )
 
@@ -69,14 +63,33 @@ class ImagesDS(D.Dataset):
         return self.len
 
 
-def prepare_data_ds(path_data):
+def duplicate_site(df):
+    df["site"] = "1"
+    idx = len(df)
+    df = pd.concat([df, df], axis=0, ignore_index=True, sort=False)
+    df.iloc[idx:]["site"] = "2"
+    return df
+
+
+def prepare_data_df(path_data, val_ratio=0.1, random_state=42):
     df = pd.read_csv(path_data + "/train.csv")
     df_train, df_val = train_test_split(
-        df, test_size=0.05, stratify=df.sirna, random_state=42
+        df, test_size=val_ratio, stratify=df.sirna, random_state=random_state
     )
-    df_test = pd.read_csv(path_data + "/test.csv")
+    df_train = duplicate_site(df_train)
+    df_val = duplicate_site(df_val)
 
+    df_test1 = pd.read_csv(path_data + "/test.csv")
+    df_test1["site"] = "1"
+    df_test2 = pd.read_csv(path_data + "/test.csv")
+    df_test2["site"] = "2"
+
+    return df_train, df_val, df_test1, df_test2
+
+
+def prepare_dataset(df_train, df_val, df_test1, df_test2, path_data):
     ds = ImagesDS(df_train, path_data, mode="train")
     ds_val = ImagesDS(df_val, path_data, mode="train")
-    ds_test = ImagesDS(df_test, path_data, mode="test")
-    return ds, ds_val, ds_test, df_train, df_val, df_test
+    ds_test1 = ImagesDS(df_test1, path_data, mode="test")
+    ds_test2 = ImagesDS(df_test2, path_data, mode="test")
+    return ds, ds_val, ds_test1, ds_test2
